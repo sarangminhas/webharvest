@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<config charset="UTF-8">
+	
+	<loop item="cr">
+		
+		<list>
+			<tokenize delimiters="&#34;|&#34;">
+			<text>
+ <var-def name="datestring">
+  
+        <file action="read" path="addresses.txt"></file>
+     
+  </var-def>
+  </text>
+  </tokenize>
+     
+  </list>
+   
+  <body>
+  	<empty>
+<!-- <script language="javascript">
+ 	var delay = 2; 
+  var now = new Date();
+    var desiredTime = new Date().setSeconds(now.getSeconds() + delay);
+
+     while (now &lt; desiredTime) {
+    now = new Date(); 
+}
+ </script> -->
+  	<var-def name="myurl">
+  	<html-to-xml>
+  	 <http url="https://dev.virtualearth.net/REST/v1/Locations?q=${cr}&amp;o=xml&amp;key=AiSvnYWBwflafUWZ8AKcmpApGlAFrKXY3mDGYC8yGBg3Qr1tr8B_KAN65WsLCYiS"/>
+  </html-to-xml>
+   </var-def>
+   <var-def name="latitude">
+   <xpath expression="(//latitude)[1]/text()">
+  			<var name="myurl"/>
+  	    </xpath>
+  	</var-def>
+  	  <var-def name="longitude">
+   <xpath expression="(//longitude)[1]/text()">
+  			<var name="myurl"/>
+  	    </xpath>
+  	</var-def>
+  	<file action="append" path="lat-long.csv">
+  		<template>
+  		${longitude} , ${latitude} ${sys.lf}
+  	    </template>
+   </file>
+</empty>
+  </body>
+  </loop>
+  
+</config>

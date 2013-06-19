@@ -1,0 +1,118 @@
+<config >
+	<!-- XML file to be used with "web harvest" to get data from yellowpages --> 
+	<!-- good tutorial for web harvest can be found here http://netprophetblog.blogspot.pt/2013/02/another-tool-webharvest-tutorial-part-1.html -->
+	<!-- also it is important to use only the version provided through this link to be used http://kent.dl.sourceforge.net/project/web-harvest/webhervest/v1.0/webharvest1-exe.zip -->
+
+ 
+   <script return="y"> <!-- defining variables to be used later to handle the data --> 
+  				var y;
+  				y=1;
+  				
+  	</script>
+  		   <script return="z"><!-- defining variables to be used later to handle the data --> 
+  				var z;
+  				z=1;
+  				
+  			</script>
+  <while condition="${z!=11}">
+  	 <!-- changing the while condition above will govern the no. of pages that will be 
+  	 downloaded and be used for collecting data. eg. if ${z!=10} will get you pages from 2-10
+  --> 
+  	
+  			
+  		<var-def name="urls">
+  		
+  		<html-to-xml> 
+        	    	<http url="http://www.yellowpages.pai.pt/q/ajax/business?contentErrorLinkEnabled=true&amp;input=Lisboa&amp;what=&amp;where=Lisboa&amp;type=DOUBLE&amp;sort=&amp;refine=&amp;char=&amp;location=&amp;address=&amp;resultlisttype=A_AND_B&amp;page=${z}&amp;originalContextPath=http%3A%2F%2Fwww.yellowpages.pai.pt%2Fq%2Fbusiness%2Fadvanced%2Fwhere%2FLisboa%2F%3FcontentErrorLinkEnabled%3Dtrue"/>
+  		</html-to-xml>    
+ <!--above lines are the tricky part. html-to-xml process in web harvest converts                                                                                                                                                                                      ^here is the variable which when changed gives you the next pages                              
+ the html to xml so that we can use xpath to get the data out.
+ http process gets the html response from the given url.                                                                                                                                                                                                               here as in each loop z changes so does the link and thus we get newer pages.                                                                      
+ The url should be well formed that is & should be replaced with &amp; and similar special http/xml symbols should be replaced.
+  Most yellow pages kind of sites have a next page result link, sometimes it is easy to get the link by just right clicking and 
+  clicking inspect element or opening in new tab.Sometimes this doesn't work because the next page button starts to execute a javascript.
+  In such a case we need to find out what link the javascript is using to get the data from the server, this can be done by 
+  google chrome. Before clicking on next page link, right click in a blank space and then click inspect element from the right click menu.
+  Now click on networks tab below the page. Now when you click next page result you can find out the link through which the javascript is getting 
+  newer results. In this link there will be variable which when changed generates the link for the the next pages.-->
+  		</var-def>
+  		<loop item="currfirm">
+  		 <list> <!-- this will create a list for firms over which the loop will be run-->
+        <xpath expression="//div[@data-number]"> <!-- xpath expression for the elements of the loop-->
+                  <var name="urls"/>
+              </xpath>
+      </list>
+  		
+  		<body>
+             <var-def name="firmname">
+            <template>
+         <xpath expression="(//div[@data-number]//span[@class='\&#34;result-bn'])/text()"> <!-- xpath expression for the name of firm -->
+                  <var name="currfirm"/>
+              </xpath>
+            </template>
+          </var-def>
+          <script > <!-- we will be storing the data in .csv file so we need to remove the "," from the names of the firms-->
+         firmname=firmname.toString();
+          firmname1=firmname.replaceAll(","," "); 
+          </script>
+         
+       
+           <loop item="addresses"> <!-- because of <br/> in the address this loop had to be created otherwise there will always be return carriage/line feed term in the address-->
+  		 <list>
+        <xpath expression="(//div[@class='\&quot;result-address\&quot;'])/text()">
+                  <var name="currfirm"/>
+              </xpath>
+        </list>
+  		<body>
+          <var-def name="address">
+            <text>
+                  <var name="addresses"/>
+            </text>
+          </var-def>
+          <script return="addresss"><!-- we will be storing the data in .csv file so we need to remove the "," from the addresses of the firms, also tried to remove the <br/> without any success-->
+           address=address.toString();
+           address1=address.replaceAll(","," ");
+           addresss=address1.replaceAll("&lt;br/&gt;"," ");
+          </script>
+          <case>
+         <if condition="${y==1}"> <!-- way to right data to file such that zip coe doesn't go to the next line --><!-- storing page no. firmname first line of address -->
+          <file action="append" path="namesAndAdderesses.csv">
+  			<template>
+  			 ${z},${firmname1} ,${addresss},
+  			</template>
+  			</file>
+  			<!-- storing page no. firmname first line of address -->
+  	     <script return="y">
+  				var y;
+  				y=2;
+  				
+  	     </script>
+  	      </if>
+  	      
+  	    <else>
+          <file action="append" path="namesAndAdderesses.csv"><!-- storing zip code, changing line, note :- do not remove the 0 (don't know why but without it the line doesn't change).-->
+  			<template>
+  			 ${addresss} ${sys.cr} 0 
+  			</template>
+  			</file><!-- storing zip code, changing line, note :- do not remove the 0 (don't know why but without it the line doesn't change).-->
+  			
+  	      <script return="y"> <!-- variable which helps us store zipcode in the same line -->
+  				var y;
+  				y=1;
+  				
+  	      </script>
+  	    </else>
+  	   </case>
+  		
+          </body>
+          </loop>
+  		
+          </body>
+          </loop>
+  		<script return="z"> <!--changing z after each loop. If infinite loop is required then don't increase z. -->
+  				z=z+1;
+  				
+  			</script>
+  			
+ </while>
+</config>
