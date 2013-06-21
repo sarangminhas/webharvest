@@ -9,7 +9,7 @@
 			<text>
  <var-def name="datestring">
   
-        <file action="read" path="addresses.txt"></file>
+        <file action="read" path="letussee.csv"></file>
      
   </var-def>
   </text>
@@ -43,7 +43,7 @@
   			<var name="myurl"/>
   	    </xpath>
   	</var-def>
-  	<file action="append" path="lat-long.csv">
+  	<file action="append" path="newsurveylat2.csv">
   		<template>
   		${longitude} , ${latitude} ${sys.lf}
   	    </template>
